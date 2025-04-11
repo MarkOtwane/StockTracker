@@ -29,7 +29,28 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // The first item is the base URL
+    const baseUrl = queryKey[0] as string;
+    
+    // Build URL with query parameters from the rest of queryKey
+    const url = new URL(baseUrl, window.location.origin);
+    
+    // If there are additional parameters (symbol, period, etc.)
+    if (queryKey.length > 1) {
+      // Add them as query parameters
+      if (baseUrl.includes('/api/stocks/quote') && queryKey[1]) {
+        url.searchParams.append('symbol', queryKey[1] as string);
+      } 
+      else if (baseUrl.includes('/api/stocks/history')) {
+        if (queryKey[1]) url.searchParams.append('symbol', queryKey[1] as string);
+        if (queryKey[2]) url.searchParams.append('period', queryKey[2] as string);
+      }
+      else if (baseUrl.includes('/api/stocks/key-stats') && queryKey[1]) {
+        url.searchParams.append('symbol', queryKey[1] as string);
+      }
+    }
+    
+    const res = await fetch(url.toString(), {
       credentials: "include",
     });
 
